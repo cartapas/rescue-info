@@ -18,5 +18,10 @@
   },
   "devDependencies": {
     "@vite-pwa/astro": "^1.2.0"
+  },
+  "overrides": {
+    "@vite-pwa/astro": {
+      "astro": "$astro"
+    }
   }
 }
