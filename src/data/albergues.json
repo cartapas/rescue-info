@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1",
+    "nombre": "Coliseo Miguel Calero",
+    "barrio": "Canchas Panamericanas",
+    "direccion": "Cl. 9 #37-00, Cali",
+    "estado": "RECIBIENDO_DONACIONES",
+    "telefono": "+573001234567",
+    "necesidades": ["Agua embotellada", "Cobijas", "Pañales Etapa 2"],
+    "ultimaActualizacion": "Hace 20 min",
+    "ubicacionUrl": "https://maps.google.com/?q=Coliseo+Miguel+Calero+Cali"
+  },
+  {
+    "id": "2",
+    "nombre": "Iglesia Reyes y Sacerdotes",
+    "barrio": "El Guabal",
+    "direccion": "Cra. 42 #13-25, Cali",
+    "estado": "LLENO",
+    "telefono": "+573159876543",
+    "necesidades": ["Alimentos no perecederos"],
+    "ultimaActualizacion": "Hace 1 hora",
+    "ubicacionUrl": "https://maps.google.com/?q=El+Guabal+Cali"
+  }
+]

@@ -1,17 +1,68 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import albergues from '../data/albergues.json';
 
+const getStatusBadge = (estado: string) => {
+  switch (estado) {
+    case 'RECIBIENDO_DONACIONES':
+      return { label: 'Recibiendo Ayuda', class: 'bg-green-900/60 text-green-300 border-green-700' };
+    case 'LLENO':
+      return { label: 'Cupo Lleno', class: 'bg-red-900/60 text-red-300 border-red-700' };
+    default:
+      return { label: 'Consultar', class: 'bg-yellow-900/60 text-yellow-300 border-yellow-700' };
+  }
+};
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="SOS Cali - Red de Albergues">
+  <div class="bg-amber-950/40 border border-amber-800/60 rounded-lg p-3 mb-6 text-sm text-amber-200">
+    <p class="font-semibold mb-1">⚠️ Información prioritaria:</p>
+    <p>Directorio verificado para coordinación de ayudas en Cali. Para personas desaparecidas, diríjase a <a href="https://colombiatebusca.com" class="underline text-amber-400" target="_blank">colombiatebusca.com</a>.</p>
+  </div>
+
+  <div class="space-y-4">
+    {albergues.map((albergue) => {
+      const status = getStatusBadge(albergue.estado);
+      const whatsappMsg = encodeURIComponent(`Hola, consulto sobre el estado del albergue ${albergue.nombre} en ${albergue.barrio}`);
+
+      return (
+        <article class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm hover:border-slate-600 transition-colors">
+          <div class="flex justify-between items-start gap-2 mb-2">
+            <div>
+              <h2 class="text-lg font-bold text-white">{albergue.nombre}</h2>
+              <p class="text-xs text-slate-400">{albergue.barrio} — {albergue.direccion}</p>
+            </div>
+            <span class={`text-xs px-2.5 py-1 rounded-full border font-medium whitespace-nowrap ${status.class}`}>
+              {status.label}
+            </span>
+          </div>
+
+          <div class="my-3">
+            <p class="text-xs text-slate-400 mb-1 font-semibold uppercase tracking-wider">Necesidades Urgentes:</p>
+            <div class="flex flex-wrap gap-1.5">
+              {albergue.necesidades.map((item) => (
+                <span class="bg-slate-700/60 border border-slate-600 text-slate-200 text-xs px-2 py-0.5 rounded">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <p class="text-[10px] text-slate-500 mb-4">Actualizado: {albergue.ultimaActualizacion}</p>
+
+          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-700/50">
+            <a href={`tel:${albergue.telefono}`} class="flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors text-center">
+              📞 Llamar
+            </a>
+            <a href={albergue.ubicacionUrl} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors text-center">
+              📍 Mapa
+            </a>
+            <a href={`https://wa.me/${albergue.telefono.replace(/[^0-9]/g, '')}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center bg-emerald-700 hover:bg-emerald-600 text-white text-xs py-2 px-3 rounded-lg font-medium transition-colors text-center">
+              💬 WhatsApp
+            </a>
+          </div>
+        </article>
+      );
+    })}
+  </div>
+</Layout>
