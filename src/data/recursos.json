@@ -1,0 +1,101 @@
+[
+  {
+    "titulo": "🚨 Personas Desaparecidas",
+    "descripcion": "Bases de datos oficiales y líneas de búsqueda para reagrupación familiar.",
+    "color": "border-red-500/40 bg-red-950/20",
+    "enlaces": [
+      {
+        "nombre": "Colombia Te Busca (Registro Web)",
+        "url": "https://colombiatebusca.com",
+        "destacado": true
+      },
+      {
+        "nombre": "Cruz Roja - WhatsApp Búsqueda",
+        "url": "https://wa.me/573212139525",
+        "subtexto": "+57 321 213 9525",
+        "destacado": false
+      },
+      {
+        "nombre": "Línea Nacional Cruz Roja (132)",
+        "url": "tel:132",
+        "destacado": false
+      }
+    ]
+  },
+  {
+    "titulo": "❤️ Donaciones y Sangre",
+    "descripcion": "Canales autorizados para aportes monetarios y donación de sangre en Cali.",
+    "color": "border-emerald-500/40 bg-emerald-950/20",
+    "enlaces": [
+      {
+        "nombre": "Portal de Donación Unificado",
+        "url": "https://www.onepay.la/donar",
+        "destacado": true
+      },
+      {
+        "nombre": "Banco Regional de Sangre (San Fernando)",
+        "url": "https://maps.google.com/?q=Carrera+38+Bis+%23+5-91+Cali",
+        "subtexto": "Cra. 38 Bis # 5-91",
+        "destacado": false
+      }
+    ]
+  },
+  {
+    "titulo": "🏡 Albergues y Centros de Acopio",
+    "descripcion": "Puntos de recepción de ayuda humanitaria e información municipal.",
+    "color": "border-amber-500/40 bg-amber-950/20",
+    "enlaces": [
+      {
+        "nombre": "Alcaldía de Cali (Información Oficial)",
+        "url": "https://www.cali.gov.co",
+        "destacado": true
+      },
+      {
+        "nombre": "Coliseo Miguel Calero (Panamericanas)",
+        "url": "https://maps.google.com/?q=Coliseo+Miguel+Calero+Cali",
+        "destacado": false
+      }
+    ]
+  },
+  {
+    "titulo": "🐾 Mascotas Extraviadas y Veterinaria",
+    "descripcion": "Redes de apoyo, albergues temporales de paso y clínicas aliadas.",
+    "color": "border-purple-500/40 bg-purple-950/20",
+    "enlaces": [
+      {
+        "nombre": "Red de Urgencias Veterinarias (Royi Pets)",
+        "url": "#",
+        "destacado": false
+      }
+    ]
+  },
+  {
+    "titulo": "🧠 Apoyo Psicológico y Salud Mental",
+    "descripcion": "Líneas de atención en crisis y contención emocional gratuita.",
+    "color": "border-blue-500/40 bg-blue-950/20",
+    "enlaces": [
+      {
+        "nombre": "Línea 106 (Atención Psicológica Cali)",
+        "url": "tel:106",
+        "destacado": true
+      },
+      {
+        "nombre": "Línea de Red de Apoyo Emocional",
+        "url": "tel:123",
+        "destacado": false
+      }
+    ]
+  },
+  {
+    "titulo": "🏗️ Revisión de Estructuras e Ingeniería",
+    "descripcion": "Solicitud de inspección técnica para viviendas e infraestructura dañada.",
+    "color": "border-slate-500/40 bg-slate-800/40",
+    "enlaces": [
+      {
+        "nombre": "Reportar Daño Estructural a Gestión del Riesgo",
+        "url": "tel:119",
+        "destacado": false
+      }
+    ]
+  }
+]
