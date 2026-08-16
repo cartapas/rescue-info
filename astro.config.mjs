@@ -15,6 +15,23 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
+          // ⏱️ Regla de Caché para la API de Google Apps Script (Refresco cada 5 minutos)
+          {
+            urlPattern: /^https:\/\/script\.google\.com\/macros\/s\/.*\/exec.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-recursos-cache',
+              networkTimeoutSeconds: 3, // Si la red responde despacio o no hay conexión, sirve caché
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 5, // Expira automáticamente en 5 minutos (300 seg)
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // Regla general para assets y documentos estáticos del sitio
           {
             urlPattern: ({ request }) => request.destination === 'document' || request.destination === 'script',
             handler: 'NetworkFirst',
