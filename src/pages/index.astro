@@ -133,6 +133,7 @@ const listaCategorias = Object.keys(categoriasMapa);
                   return (
                     <div 
                       class="item-card transition-all"
+                      data-id={item.id || ''}
                       data-estado={item.estado || 'ACTIVO'}
                       data-es-activo={esActivo ? "true" : "false"}
                     >
@@ -291,12 +292,20 @@ const listaCategorias = Object.keys(categoriasMapa);
       });
     });
 
-    // 🔄 RE-CONSULTA PERIÓDICA A LA API CADA 5 MINUTOS (300,000 ms)
+    // 🔄 RE-CONSULTA PERIÓDICA A LA API CADA 5 MINUTOS (300,000 ms) CON DETECCIÓN DE CAMBIOS
     const baseUrl = import.meta.env.PUBLIC_APPS_SCRIPT_URL;
     const token = import.meta.env.PUBLIC_SECRET_TOKEN;
 
     if (baseUrl) {
       const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+
+      // Obtener el listado de IDs renderizados actualmente en la página
+      const getDOMItemIds = (): string[] => {
+        const cards = Array.from(document.querySelectorAll('.item-card'));
+        return cards.map((card) => card.getAttribute('data-id') || '').filter(Boolean);
+      };
+
+      const currentIds = getDOMItemIds();
 
       const consultarActualizacionBackground = async () => {
         try {
@@ -309,7 +318,21 @@ const listaCategorias = Object.keys(categoriasMapa);
           });
 
           if (res.ok) {
-            console.log('🔄 Sincronización periódica ejecutada con éxito a las', new Date().toLocaleTimeString());
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              const apiIds = data.map((item: any) => item.id || '').filter(Boolean);
+
+              // Comprobar si hay una diferencia entre los IDs del DOM y los de la API
+              const hayCambios = apiIds.length !== currentIds.length || 
+                apiIds.some((id: string) => !currentIds.includes(id));
+
+              if (hayCambios) {
+                console.log('✨ Se detectaron datos nuevos en la API. Recargando interfaz...');
+                window.location.reload();
+              } else {
+                console.log('🔄 Sincronización realizada: No hay cambios en los registros.');
+              }
+            }
           }
         } catch (error) {
           console.warn('⚠️ No se pudo realizar la sincronización en segundo plano (posible modo offline).');
