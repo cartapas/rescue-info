@@ -6,8 +6,7 @@ interface Props {
     titulo: string;
     descripcion: string;
     contactoNombre: string;
-    contactoTelefono: string;
-    contactoCorreo?: string;
+    contactoTelefono?: string;
     flyerUrl?: string;
     enlaceAccion?: string;
     estado: 'ACTIVO' | 'INACTIVO' | 'ALERTA_FRAUDE';
@@ -17,6 +16,48 @@ interface Props {
 
 const { recurso } = Astro.props;
 
+// Configuración del número de WhatsApp administrativo para recibir reportes
+const WHATSAPP_ADMIN = import.meta.env.PUBLIC_WHATSAPP_ADMIN;
+
+// Helper para sanitizar URLs y transformar enlaces de Google Drive a imágenes directas
+const sanitizarUrl = (str?: string) => {
+  if (!str) return '';
+  
+  let url = String(str).trim();
+
+  // Si viene en formato Markdown [texto](url), extraemos la URL
+  const matchMarkdown = url.match(/\((https?:\/\/[^)]+)\)/);
+  if (matchMarkdown) {
+    url = matchMarkdown[1];
+  } else {
+    url = url.replace(/[\[\]]/g, '').trim();
+  }
+
+  // Conversión automática de Google Drive a enlace directo de imagen
+  const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+  }
+
+  return url;
+};
+
+const enlaceLimpio = sanitizarUrl(recurso.enlaceAccion);
+const flyerLimpio = sanitizarUrl(recurso.flyerUrl || recurso.flyerURL);
+
+// Teléfono sanitizado para el enlace de WhatsApp del referidor
+const telefonoLimpio = String(recurso.contactoTelefono || '').replace(/[^0-9]/g, '');
+
+// Mensaje prellenado para el reporte por WhatsApp
+const itemId = recurso.id || 'N/A';
+const mensajeReporte = encodeURIComponent(
+  `Hola, quiero reportar una novedad o actualización sobre el punto:\n\n` +
+  `* ID: [${itemId}] ${recurso.titulo}*\n` +
+  `* Categoría: ${recurso.categoria}\n\n` +
+  `Observación / Estado actual:`
+);
+const urlWhatsappReporte = `https://wa.me/${WHATSAPP_ADMIN}?text=${mensajeReporte}`;
+
 // Configuración visual según el estado
 const statusConfig = {
   ACTIVO: { badge: 'bg-emerald-950 text-emerald-300 border-emerald-700', card: 'border-slate-700 bg-slate-800/90' },
@@ -25,19 +66,20 @@ const statusConfig = {
 };
 
 const currentStatus = statusConfig[recurso.estado] || statusConfig.ACTIVO;
+const fechaActualizacion = recurso.ultimaActualizacion || "Recientemente";
 ---
 
-<article class={`border rounded-xl p-4 shadow-md transition-all ${currentStatus.card}`}>
+<article class={`border rounded-xl p-4 shadow-md transition-all space-y-3 ${currentStatus.card}`}>
   
   <!-- Banner de Advertencia si es Fraude -->
   {recurso.estado === 'ALERTA_FRAUDE' && (
-    <div class="bg-red-900/80 border border-red-700 text-red-100 text-xs p-2.5 rounded-lg mb-3 font-semibold flex items-center gap-2">
+    <div class="bg-red-900/80 border border-red-700 text-red-100 text-xs p-2.5 rounded-lg font-semibold flex items-center gap-2">
       ⚠️ ALERTA: La comunidad ha reportado posibles irregularidades o fraude con este contenido.
     </div>
   )}
 
   <!-- Cabecera -->
-  <div class="flex justify-between items-start gap-2 mb-2">
+  <div class="flex justify-between items-start gap-2">
     <div>
       <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase bg-slate-700/50 px-2 py-0.5 rounded">
         {recurso.categoria}
@@ -49,51 +91,79 @@ const currentStatus = statusConfig[recurso.estado] || statusConfig.ACTIVO;
     </span>
   </div>
 
-  <p class="text-xs text-slate-300 mb-3">{recurso.descripcion}</p>
+  <p class="text-xs text-slate-300">{recurso.descripcion}</p>
 
-  <!-- Flyer Adjunto (Lazy Collapse) -->
-  {recurso.flyerUrl && (
-    <details class="mb-4 bg-slate-900/60 border border-slate-700/60 rounded-lg overflow-hidden text-xs">
-      <summary class="p-2.5 font-medium text-emerald-400 cursor-pointer hover:bg-slate-800 transition-colors flex items-center justify-between">
-        <span>🖼️ Ver Flyer / Afiche adjunto</span>
+  <!-- Flyer Adjunto (Lazy Collapse con Zoom / Abrir en Tamaño Completo) -->
+  {flyerLimpio && (
+    <details open class="bg-slate-900/60 border border-slate-700/60 rounded-lg overflow-hidden text-xs">
+      <summary class="p-2.5 font-medium text-emerald-400 cursor-pointer hover:bg-slate-800 transition-colors flex items-center justify-between select-none">
+        <span>🖼️ Ver/Cerrar Miniatura</span>
         <span class="text-[10px] text-slate-500">Clic para desplegar</span>
       </summary>
-      <div class="p-2 bg-slate-950 text-center">
-        <img 
-          src={recurso.flyerUrl} 
-          alt={`Flyer de ${recurso.titulo}`} 
-          loading="lazy" 
-          class="max-h-96 mx-auto rounded border border-slate-800 object-contain"
-        />
+      <div class="p-2 bg-slate-950 text-center border-t border-slate-800 space-y-2">
+        <!-- Enlace que envuelve la imagen para abrir en tamaño completo -->
+        <a 
+          href={flyerLimpio} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="block group relative cursor-zoom-in overflow-hidden rounded border border-slate-800"
+          title="Haz clic para abrir la imagen en tamaño completo"
+        >
+          <img 
+            src={flyerLimpio} 
+            alt={`Flyer de ${recurso.titulo}`} 
+            loading="lazy" 
+            class="max-h-96 mx-auto object-contain transition-transform duration-200 group-hover:scale-105"
+          />
+          <span class="absolute bottom-2 right-2 bg-slate-900/80 text-slate-200 text-[10px] px-2 py-0.5 rounded border border-slate-700/80 opacity-0 group-hover:opacity-100 transition-opacity">
+            🔍 Abrir tamaño completo ↗
+          </span>
+        </a>
       </div>
     </details>
   )}
 
   <!-- Información de Quien Refiere (Obligatorio) -->
-  <div class="bg-slate-900/80 border border-slate-700/50 rounded-lg p-2.5 mb-3 text-xs space-y-1">
+  <div class="bg-slate-900/80 border border-slate-700/50 rounded-lg p-2.5 text-xs space-y-1">
     <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Referido y verificado por:</p>
     <div class="flex justify-between items-center text-slate-200">
       <span class="font-medium">👤 {recurso.contactoNombre}</span>
-      <a 
-        href={`https://wa.me/+${String(recurso.contactoTelefono || '').replace(/[^0-9]/g, '')}`} 
-        target="_blank" 
-        class="text-emerald-400 hover:underline font-mono text-[11px]"
-      >
-        📱 {recurso.contactoTelefono}
-      </a>
+      {telefonoLimpio && (
+        <a 
+          href={`https://wa.me/${telefonoLimpio}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="text-emerald-400 hover:underline font-mono text-[11px]"
+        >
+          📱 {recurso.contactoTelefono}
+        </a>
+      )}
     </div>
+  </div>
+
+  <!-- Botón de Reporte Directo por WhatsApp -->
+  <div class="bg-slate-900/40 border border-slate-700/40 p-2 rounded-lg text-xs flex justify-between items-center">
+    <span class="text-[11px] text-slate-400">¿Dato desactualizado o erróneo?</span>
+    <a 
+      href={urlWhatsappReporte}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-700/60 text-[11px] font-medium px-2.5 py-1 rounded transition-colors"
+    >
+      ⚠️ Reportar novedad por WhatsApp
+    </a>
   </div>
 
   <!-- Pie de la Tarjeta con Timestamp y Acciones -->
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-3 border-t border-slate-700/60 text-[11px]">
     <span class="text-slate-400 font-mono text-[10px]">
-      🕒 Actualizado: {recurso.ultimaActualizacion || recurso.UltimaActualizacion || "Recientemente"}
+      🕒 Actualizado: {fechaActualizacion}
     </span>
 
     <div class="flex items-center gap-2 w-full sm:w-auto">
-      {recurso.enlaceAccion && (
+      {enlaceLimpio && (
         <a 
-          href={recurso.enlaceAccion} 
+          href={enlaceLimpio} 
           target="_blank" 
           rel="noopener noreferrer" 
           class="flex-1 sm:flex-initial text-center bg-slate-100 hover:bg-white text-slate-900 font-semibold px-3 py-1.5 rounded-lg transition-colors text-xs"
