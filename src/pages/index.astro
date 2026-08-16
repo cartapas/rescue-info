@@ -62,7 +62,7 @@ const listaCategorias = Object.keys(categoriasMapa);
       </span>
       <h1 class="text-xl font-bold text-white">Cali Ayuda App: Recursos para apoyar</h1>
       <p class="text-xs text-slate-400 max-w-md mx-auto">
-        Filtramos y consolidados la información útil que llega a través de múltiples canales comunitarios durante la coyuntura actual, facilitando la búsqueda por temas de interés.
+        Filtramos y consolidamos la información útil que llega a través de múltiples canales comunitarios durante la coyuntura actual, facilitando la búsqueda por temas de interés.
       </p>
     </div>
 
@@ -180,7 +180,7 @@ const listaCategorias = Object.keys(categoriasMapa);
 </Layout>
 
 <script>
-  // Lógica cliente para tabs, filtrado de estados y paginación
+  // Lógica cliente para tabs, filtrado de estados, paginación y re-consulta periódica
   document.addEventListener('DOMContentLoaded', () => {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const panels = document.querySelectorAll('.category-panel');
@@ -291,7 +291,35 @@ const listaCategorias = Object.keys(categoriasMapa);
       });
     });
 
-    // Ejecución inicial
+    // 🔄 RE-CONSULTA PERIÓDICA A LA API CADA 5 MINUTOS (300,000 ms)
+    const baseUrl = import.meta.env.PUBLIC_APPS_SCRIPT_URL;
+    const token = import.meta.env.PUBLIC_SECRET_TOKEN;
+
+    if (baseUrl) {
+      const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+
+      const consultarActualizacionBackground = async () => {
+        try {
+          const timestamp = new Date().getTime();
+          const requestUrl = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}token=${token || ''}&_t=${timestamp}`;
+
+          const res = await fetch(requestUrl, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+
+          if (res.ok) {
+            console.log('🔄 Sincronización periódica ejecutada con éxito a las', new Date().toLocaleTimeString());
+          }
+        } catch (error) {
+          console.warn('⚠️ No se pudo realizar la sincronización en segundo plano (posible modo offline).');
+        }
+      };
+
+      setInterval(consultarActualizacionBackground, REFRESH_INTERVAL_MS);
+    }
+
+    // Ejecución inicial de renderizado
     updateAllPanels();
   });
 </script>
