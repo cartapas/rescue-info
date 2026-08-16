@@ -10,7 +10,7 @@ interface Props {
     contactoCorreo?: string;
     flyerUrl?: string;
     enlaceAccion?: string;
-    estado: 'ACTIVO' | 'DESACTIVADO' | 'ALERTA_FRAUDE';
+    estado: 'ACTIVO' | 'INACTIVO' | 'ALERTA_FRAUDE';
     ultimaActualizacion: string;
   };
 }
@@ -20,7 +20,7 @@ const { recurso } = Astro.props;
 // Configuración visual según el estado
 const statusConfig = {
   ACTIVO: { badge: 'bg-emerald-950 text-emerald-300 border-emerald-700', card: 'border-slate-700 bg-slate-800/90' },
-  DESACTIVADO: { badge: 'bg-slate-800 text-slate-400 border-slate-600', card: 'border-slate-800 bg-slate-900/50 opacity-75' },
+  INACTIVO: { badge: 'bg-slate-800 text-slate-400 border-slate-600', card: 'border-slate-800 bg-slate-900/50 opacity-75' },
   ALERTA_FRAUDE: { badge: 'bg-red-950 text-red-300 border-red-700 animate-pulse', card: 'border-red-600/80 bg-red-950/20' }
 };
 
@@ -87,7 +87,7 @@ const currentStatus = statusConfig[recurso.estado] || statusConfig.ACTIVO;
   <!-- Pie de la Tarjeta con Timestamp y Acciones -->
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-3 border-t border-slate-700/60 text-[11px]">
     <span class="text-slate-400 font-mono text-[10px]">
-      🕒 Actualizado: {recurso.ultimaActualizacion}
+      🕒 Actualizado: {recurso.ultimaActualizacion || recurso.UltimaActualizacion || "Recientemente"}
     </span>
 
     <div class="flex items-center gap-2 w-full sm:w-auto">

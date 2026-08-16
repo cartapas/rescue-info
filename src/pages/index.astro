@@ -1,43 +1,201 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import RecursoCard from '../components/RecursoCard.astro';
+import { getCategoryIcon } from '../utils/getCategoryIcon';
 
-// Reemplaza con la URL copiada de Apps Script en el Paso 2
 const API_URL = "https://script.google.com/macros/s/AKfycbwXXQmr_aaO8TXIl4sPDkhF4NS4s1DgptPbzm6gQwdA53uvQTC2BxQEKm53DJpHk72q/exec";
 
 let recursos = [];
+let categoriasMapa: Record<string, any[]> = {};
 
 try {
   const res = await fetch(API_URL);
   if (res.ok) {
     recursos = await res.json();
+    
+    recursos.forEach((item) => {
+      const cat = item.categoria || 'General';
+      if (!categoriasMapa[cat]) {
+        categoriasMapa[cat] = [];
+      }
+      categoriasMapa[cat].push(item);
+    });
   }
 } catch (error) {
   console.error("Error al consultar Google Sheets API:", error);
 }
+
+const listaCategorias = Object.keys(categoriasMapa);
 ---
 
-<Layout title="Cali Ayuda - Directorio Comunitario de Emergencia">
-  <div class="space-y-6 py-2">
-    <div class="text-center space-y-2 border-b border-slate-800 pb-4">
-      <span class="text-xs font-semibold uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-3 py-1 rounded-full border border-emerald-700/50">
+<Layout title="Cali Ayuda - Directorio por Categorías">
+  <div class="space-y-4 py-2">
+    <!-- Header Principal Compacto -->
+    <div class="text-center space-y-1 border-b border-slate-800 pb-3">
+      <span class="text-[10px] font-semibold uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-700/50">
         Directorio Verificado
       </span>
-      <h1 class="text-2xl font-bold text-white">Cali Ayuda: Puntos y Reportes</h1>
-      <p class="text-xs text-slate-400 max-w-lg mx-auto">
-        Información centralizada de donaciones, albergues y reportes tras el sismo. Verifica los datos del contacto antes de realizar aportes.
+      <h1 class="text-xl font-bold text-white">Cali Ayuda: Puntos y Reportes</h1>
+      <p class="text-xs text-slate-400 max-w-md mx-auto">
+        Consulta recursos divididos por categoría. Verifica la fuente antes de realizar aportes.
       </p>
     </div>
 
-    <!-- Lista de Entradas -->
-    <div class="space-y-4">
-      {recursos.length > 0 ? (
-        recursos.map((item) => <RecursoCard recurso={item} />)
-      ) : (
-        <div class="text-center py-12 text-slate-500 text-sm">
-          No hay reportes cargados o el servicio se está actualizando...
+    {listaCategorias.length > 0 ? (
+      <div id="directorio-app" class="space-y-4">
+        
+        <!-- Pestañas de Categorías con Íconos Visibles -->
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-700">
+          {listaCategorias.map((cat, index) => {
+            const icon = getCategoryIcon(cat);
+            return (
+              <button
+                data-category-tab={cat}
+                class={`tab-btn flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-lg border whitespace-nowrap transition-all ${
+                  index === 0
+                    ? "bg-emerald-700 text-white border-emerald-600 shadow-sm"
+                    : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                }`}
+              >
+                <span>{icon}</span>
+                <span>{cat}</span>
+                <span class="text-[10px] opacity-75 bg-slate-900/40 px-1.5 py-0.5 rounded-full ml-0.5">
+                  {categoriasMapa[cat].length}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      )}
-    </div>
+
+        <!-- Paneles de Contenido de Categorías (se mantiene igual con paginación) -->
+        {listaCategorias.map((cat, index) => {
+          const items = categoriasMapa[cat];
+          const icon = getCategoryIcon(cat);
+
+          return (
+            <div
+              data-category-panel={cat}
+              class={`category-panel space-y-3 ${index === 0 ? "" : "hidden"}`}
+            >
+              <!-- Encabezado de la Categoría Seleccionada -->
+              <div class="flex items-center gap-2 border-b border-slate-800 pb-2 mb-2">
+                <span class="text-xl">{icon}</span>
+                <h2 class="text-sm font-bold text-white">{cat}</h2>
+              </div>
+
+              <!-- Listado de Tarjetas con Paginación -->
+              <div class="space-y-3">
+                {items.map((item, itemIdx) => (
+                  <div 
+                    data-item-page={Math.floor(itemIdx / 5) + 1} 
+                    class={`item-card ${itemIdx >= 5 ? "hidden" : ""}`}
+                  >
+                    <RecursoCard recurso={item} />
+                  </div>
+                ))}
+              </div>
+
+              <!-- Control de Paginación de 5 en 5 -->
+              {items.length > 5 && (
+                <div class="flex justify-between items-center bg-slate-800/80 border border-slate-700/80 rounded-lg p-2 mt-3 text-xs">
+                  <button
+                    data-page-action="prev"
+                    class="prev-btn bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-white px-3 py-1 rounded font-medium transition-colors"
+                    disabled
+                  >
+                    ← Anterior
+                  </button>
+                  <span class="page-info text-slate-400 font-mono text-[11px]">
+                    Página <strong class="text-white current-page">1</strong> de <strong class="text-white total-pages">{Math.ceil(items.length / 5)}</strong>
+                  </span>
+                  <button
+                    data-page-action="next"
+                    class="next-btn bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-white px-3 py-1 rounded font-medium transition-colors"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+      </div>
+    ) : (
+      <div class="text-center py-12 text-slate-500 text-sm bg-slate-800/30 rounded-xl border border-slate-800">
+        No hay reportes cargados actualmente o la base de datos se está actualizando...
+      </div>
+    )}
   </div>
 </Layout>
+
+<script>
+  // Lógica de clientes para tabs y paginación
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.category-panel');
+
+    tabBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetCategory = btn.getAttribute('data-category-tab');
+
+        tabBtns.forEach((b) => {
+          b.classList.remove('bg-emerald-700', 'text-white', 'border-emerald-600');
+          b.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+        });
+        btn.classList.add('bg-emerald-700', 'text-white', 'border-emerald-600');
+        btn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+
+        panels.forEach((p) => {
+          if (p.getAttribute('data-category-panel') === targetCategory) {
+            p.classList.remove('hidden');
+          } else {
+            p.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    panels.forEach((panel) => {
+      const prevBtn = panel.querySelector('.prev-btn') as HTMLButtonElement;
+      const nextBtn = panel.querySelector('.next-btn') as HTMLButtonElement;
+      const currentPageEl = panel.querySelector('.current-page');
+      const totalPagesEl = panel.querySelector('.total-pages');
+      
+      if (!prevBtn || !nextBtn) return;
+
+      let currentPage = 1;
+      const totalPages = parseInt(totalPagesEl?.textContent || '1', 10);
+
+      const updatePagination = () => {
+        const cards = panel.querySelectorAll('.item-card');
+        cards.forEach((card) => {
+          const cardPage = parseInt(card.getAttribute('data-item-page') || '1', 10);
+          if (cardPage === currentPage) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+
+        if (currentPageEl) currentPageEl.textContent = String(currentPage);
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+      };
+
+      prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          updatePagination();
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          updatePagination();
+        }
+      });
+    });
+  });
+</script>
